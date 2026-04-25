@@ -1,0 +1,16 @@
+name: SpreadPilot 10-Min Scan
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual triggering from GitHub UI
+
+jobs:
+  run-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger P2P Scanner
+        run: |
+          curl -X POST "https://spreadpilot.vercel.app/api/jobs/run-scan" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Content-Type: application/json"
