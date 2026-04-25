@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { tradeJournal, userGoals } from "@/db/schema";
+import { tradeJournal } from "@/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
@@ -35,30 +35,5 @@ export async function logTrade(formData: FormData) {
   });
 
   revalidatePath("/dashboard/journal");
-  revalidatePath("/dashboard");
-}
-
-export async function updateGoals(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
-
-  const dailyProfitTarget = formData.get("dailyProfitTarget") as string;
-  const weeklyProfitTarget = formData.get("weeklyProfitTarget") as string;
-
-  await db.insert(userGoals).values({
-    userClerkId: userId,
-    dailyProfitTarget,
-    weeklyProfitTarget,
-    updatedAt: new Date(),
-  }).onConflictDoUpdate({
-    target: [userGoals.userClerkId],
-    set: {
-      dailyProfitTarget,
-      weeklyProfitTarget,
-      updatedAt: new Date(),
-    },
-  });
-
-  revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard");
 }

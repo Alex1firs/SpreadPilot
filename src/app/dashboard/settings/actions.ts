@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { alertSettings } from "@/db/schema";
+import { alertSettings, userGoals } from "@/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -48,5 +48,41 @@ export async function saveAlertSettings(formData: FormData) {
   } catch (error) {
     console.error("Failed to save settings:", error);
     return { error: "Failed to save settings. Please try again." };
+  }
+}
+
+export async function saveGoalSettings(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) {
+    return { error: "Unauthorized" };
+  }
+
+  const dailyProfitTarget = formData.get("dailyProfitTarget")?.toString() || "10000";
+  const weeklyProfitTarget = formData.get("weeklyProfitTarget")?.toString() || "50000";
+
+  try {
+    const existing = await db.select().from(userGoals).where(eq(userGoals.userClerkId, userId));
+    
+    if (existing.length > 0) {
+      await db.update(userGoals)
+        .set({
+          dailyProfitTarget,
+          weeklyProfitTarget,
+          updatedAt: new Date()
+        })
+        .where(eq(userGoals.userClerkId, userId));
+    } else {
+      await db.insert(userGoals).values({
+        userClerkId: userId,
+        dailyProfitTarget,
+        weeklyProfitTarget,
+      });
+    }
+
+    revalidatePath("/dashboard/settings");
+    return { success: true, message: "Goals saved successfully!" };
+  } catch (error) {
+    console.error("Failed to save goals:", error);
+    return { error: "Failed to save goals. Please try again." };
   }
 }

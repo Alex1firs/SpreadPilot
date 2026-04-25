@@ -1,4 +1,5 @@
 import { Lock } from 'lucide-react';
+import Link from 'next/link';
 import { db } from '@/db';
 import { alertSettings, userGoals } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -43,9 +44,9 @@ export default async function SettingsPage() {
         </div>
         <div className="p-6">
           <p className="text-gray-400 mb-6">Manage your authentication and profile details via Clerk.</p>
-          <button className="border border-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+          <Link href="/dashboard/settings/profile" className="inline-block border border-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium transition-colors">
             Manage Account Settings
-          </button>
+          </Link>
         </div>
       </div>
     </div>
