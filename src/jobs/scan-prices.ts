@@ -133,7 +133,7 @@ export async function runScanner() {
 }
 
 // Allow CLI execution
-if (import.meta.url.endsWith(process.argv[1]) || process.argv[1].endsWith('scan-prices.ts')) {
+if (process.argv[1] && (import.meta.url.endsWith(process.argv[1]) || process.argv[1].endsWith('scan-prices.ts'))) {
   runScanner().catch(err => {
     console.error('❌ Scanner Error:', err);
     process.exit(1);

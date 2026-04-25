@@ -110,7 +110,7 @@ export async function runAlertCheck() {
 }
 
 // Allow CLI execution
-if (import.meta.url.endsWith(process.argv[1]) || process.argv[1].endsWith('check-alerts.ts')) {
+if (process.argv[1] && (import.meta.url.endsWith(process.argv[1]) || process.argv[1].endsWith('check-alerts.ts'))) {
   runAlertCheck().catch(err => {
     console.error("Critical Job Error:", err);
     process.exit(1);
