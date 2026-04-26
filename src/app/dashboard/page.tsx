@@ -2,7 +2,7 @@ import { MetricCard } from '@/components/ui/MetricCard';
 import { Activity, TrendingUp, DollarSign, BellRing, Clock, ArrowUpRight, BarChart3, Target } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/db';
-import { opportunities, exchangePrices, spotProviderHealth, alertSettings, scanRuns, tradeJournal, userGoals, autoPilotSettings } from '@/db/schema';
+import { opportunities, exchangePrices, spotProviderHealth, alertSettings, scanRuns, spotScanRuns, tradeJournal, userGoals, autoPilotSettings } from '@/db/schema';
 import { eq, desc, gte, and } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
 import { MiniTrendChart } from '@/components/charts/mini-trend';
@@ -57,16 +57,16 @@ export default async function DashboardOverview() {
       .orderBy(desc(scanRuns.startedAt))
       .limit(20);
 
-    const latestScan = await db.select()
-      .from(scanRuns)
-      .orderBy(desc(scanRuns.startedAt))
+    const latestSpotScan = await db.select()
+      .from(spotScanRuns)
+      .orderBy(desc(spotScanRuns.startedAt))
       .limit(1)
       .then((rows) => rows[0] ?? null);
 
-    if (latestScan) {
+    if (latestSpotScan) {
       providerHealth = await db.select()
         .from(spotProviderHealth)
-        .where(eq(spotProviderHealth.scanRunId, latestScan.id))
+        .where(eq(spotProviderHealth.scanRunId, latestSpotScan.id))
         .orderBy(desc(spotProviderHealth.checkedAt));
     }
 
