@@ -166,3 +166,11 @@ export const spotScanRuns = pgTable('spot_scan_runs', {
   errorMessage: text('error_message'),
 });
 
+export const ngnP2pSpreads = pgTable('ngn_p2p_spreads', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  p2pBuyRate: numeric('p2p_buy_rate').notNull(),
+  p2pSellRate: numeric('p2p_sell_rate').notNull(),
+  spotRateNgn: numeric('spot_rate_ngn').notNull(),
+  spreadPercent: numeric('spread_percent').notNull(),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+});

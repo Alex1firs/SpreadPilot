@@ -23,3 +23,12 @@ jobs:
           curl -s -X POST "https://spread-pilot-seven.vercel.app/api/jobs/run-spot-scan" \
           -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
           -H "Content-Type: application/json"
+
+  run-ngn-p2p-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger NGN P2P Scanner
+        run: |
+          curl -s -X POST "https://spread-pilot-seven.vercel.app/api/jobs/run-ngn-p2p" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Content-Type: application/json"
