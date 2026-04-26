@@ -7,6 +7,21 @@ export const SPOT_SYMBOLS: SpotSymbol[] = [
   'SOLUSDT',
   'BNBUSDT',
   'XRPUSDT',
+  // Mid-cap
+  'AVAXUSDT',
+  'ADAUSDT',
+  'DOTUSDT',
+  'LINKUSDT',
+  'LTCUSDT',
+  'MATICUSDT',
+  'TRXUSDT',
+  'ATOMUSDT',
+  // High-volatility
+  'SHIBUSDT',
+  'PEPEUSDT',
+  'WIFUSDT',
+  'NOTUSDT',
+  'BONKUSDT'
 ];
 
 /** Default USDT trade size for opportunity calculations */
@@ -23,6 +38,8 @@ export const EXCHANGE_FEES: Record<string, number> = {
   Bybit:   0.001,   // 0.1% taker
   KuCoin:  0.001,   // 0.1% taker (0.08% with KCS)
   OKX:     0.0008,  // 0.08% taker
+  GateIo:  0.002,   // 0.2% taker
+  MEXC:    0.001,   // 0.1% taker
 };
 
 /**
@@ -36,6 +53,19 @@ export const WITHDRAWAL_FEES_BASE: Record<SpotSymbol, number> = {
   SOLUSDT: 0.01,
   BNBUSDT: 0.001,
   XRPUSDT: 0.25,
+  AVAXUSDT: 0.01,
+  ADAUSDT: 1.0,
+  DOTUSDT: 0.1,
+  LINKUSDT: 0.5,
+  LTCUSDT: 0.001,
+  MATICUSDT: 0.1,
+  TRXUSDT: 1.0,
+  ATOMUSDT: 0.005,
+  SHIBUSDT: 100000,
+  PEPEUSDT: 1000000,
+  WIFUSDT: 5,
+  NOTUSDT: 50,
+  BONKUSDT: 50000,
 };
 
 /** Minimum net profit (USDT) required to surface an opportunity */

@@ -12,6 +12,8 @@ import { BinanceSpotProvider } from '@/scanner/spot/providers/binance';
 import { BybitSpotProvider } from '@/scanner/spot/providers/bybit';
 import { KuCoinSpotProvider } from '@/scanner/spot/providers/kucoin';
 import { OKXSpotProvider } from '@/scanner/spot/providers/okx';
+import { GateIoSpotProvider } from '@/scanner/spot/providers/gate';
+import { MEXCSpotProvider } from '@/scanner/spot/providers/mexc';
 import { calculateSpotOpportunities } from '@/scanner/spot/calculate-opportunities';
 import { MarketPrice, SpotOpportunity } from '@/scanner/spot/types';
 import { SPOT_SYMBOLS, CONFIRMATION_WAIT_SECONDS } from '@/scanner/spot/config';
@@ -35,6 +37,8 @@ export async function POST(request: Request) {
     new BybitSpotProvider(),
     new KuCoinSpotProvider(),
     new OKXSpotProvider(),
+    new GateIoSpotProvider(),
+    new MEXCSpotProvider(),
   ];
 
   const [scanRun] = await db.insert(spotScanRuns).values({
