@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Activity, LayoutDashboard, BookOpen, Settings, History, CreditCard, TrendingUp, Zap, LineChart, Repeat, Coins, Key } from 'lucide-react';
+import { Activity, LayoutDashboard, BookOpen, Settings, History, CreditCard, TrendingUp, Zap, LineChart, Repeat, Coins, Key, HelpCircle } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { getUserSubscription, PLANS } from '@/lib/subscription';
 import { auth } from '@clerk/nextjs/server';
@@ -30,6 +30,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors">
             <LayoutDashboard className="h-4 w-4" />
             Overview
+          </Link>
+          <Link href="/dashboard/setup" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-emerald-400/90 rounded-lg bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/10 transition-colors">
+            <HelpCircle className="h-4 w-4" />
+            Setup Guide
           </Link>
           <Link href="/dashboard/spot" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors group">
             <Zap className="h-4 w-4 text-emerald-400 group-hover:text-emerald-300" />

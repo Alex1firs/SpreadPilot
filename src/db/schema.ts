@@ -233,3 +233,12 @@ export const autoTrades = pgTable('auto_trades', {
   orderId: text('order_id'),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
 });
+
+export const listingAlerts = pgTable('listing_alerts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  symbol: text('symbol').notNull(),
+  announcementCode: text('announcement_code').notNull().unique(),
+  releaseDate: timestamp('release_date').notNull(),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+});
