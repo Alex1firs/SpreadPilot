@@ -57,17 +57,23 @@ export default async function DashboardOverview() {
       .orderBy(desc(scanRuns.startedAt))
       .limit(20);
 
-    const latestSpotScan = await db.select()
-      .from(spotScanRuns)
-      .orderBy(desc(spotScanRuns.startedAt))
-      .limit(1)
-      .then((rows) => rows[0] ?? null);
+    // Optional spot scanner metadata. This is non-blocking if the feature table isn't present yet.
+    try {
+      const latestSpotScan = await db.select()
+        .from(spotScanRuns)
+        .orderBy(desc(spotScanRuns.startedAt))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
 
-    if (latestSpotScan) {
-      providerHealth = await db.select()
-        .from(spotProviderHealth)
-        .where(eq(spotProviderHealth.scanRunId, latestSpotScan.id))
-        .orderBy(desc(spotProviderHealth.checkedAt));
+      if (latestSpotScan) {
+        providerHealth = await db.select()
+          .from(spotProviderHealth)
+          .where(eq(spotProviderHealth.scanRunId, latestSpotScan.id))
+          .orderBy(desc(spotProviderHealth.checkedAt));
+      }
+    } catch (spotHealthError) {
+      console.warn('[Dashboard] Optional spot provider health query failed:', spotHealthError);
+      providerHealth = [];
     }
 
     // Journal Stats
