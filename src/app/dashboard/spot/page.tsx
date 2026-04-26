@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { spotOpportunities, spotScanRuns } from '@/db/schema';
+import { spotOpportunities, spotScanRuns, spotMarketPrices } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { Zap, ShieldCheck, AlertCircle, Clock, TrendingUp, ArrowRight, Info } from 'lucide-react';
 
@@ -58,7 +58,7 @@ function ConfidenceBadge({ score }: { score: number }) {
 }
 
 export default async function SpotArbitragePage() {
-  const { activeOpps, lastScan } = await getSpotData();
+  const { activeOpps, lastScan, latestPrices } = await getSpotData();
   const lastRunAt = lastScan?.completedAt ?? lastScan?.startedAt ?? null;
   const scanStatus = lastScan?.status ?? 'none';
 
