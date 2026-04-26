@@ -4,6 +4,8 @@ import { spotOpportunities, spotScanRuns, spotMarketPrices } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { Zap, ShieldCheck, AlertCircle, Clock, TrendingUp, ArrowRight, Info } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
 
