@@ -20,6 +20,11 @@ export default async function SpotDebugPage() {
     db.select().from(spotAlertLogs).orderBy(desc(spotAlertLogs.sentAt)).limit(10),
   ]);
 
+  const safeRecentAlerts = recentAlerts || [];
+  const safeLatestPrices = latestPrices || [];
+  const safeRecentOpps = recentOpps || [];
+  const safeLastScan = lastScan || null;
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="space-y-3">

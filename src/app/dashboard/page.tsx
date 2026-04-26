@@ -21,39 +21,75 @@ export default async function DashboardOverview() {
   const isPremium = sub.plan === PLANS.PREMIUM;
   const isPro = sub.plan === PLANS.PRO || isPremium;
 
-  const activeSpreads = await db.select()
-    .from(opportunities)
-    .where(eq(opportunities.isActive, true))
-    .orderBy(desc(opportunities.spread));
+  let activeSpreads: any[] = [];
+  let lastPrices: any[] = [];
+  let alertsStatus: any[] = [];
+  let recentRuns: any[] = [];
+  let providerHealth: any[] = [];
+  let todayTrades: any[] = [];
+  let weeklyTrades: any[] = [];
+  let userGoal: any[] = [];
+  let autopilot: any[] = [];
+  let dashboardError: string | null = null;
 
-  const lastPrices = await db.select({
-    lastUpdated: exchangePrices.lastUpdated,
-  })
-  .from(exchangePrices)
-  .orderBy(desc(exchangePrices.lastUpdated))
-  .limit(1);
+  try {
+    activeSpreads = await db.select()
+      .from(opportunities)
+      .where(eq(opportunities.isActive, true))
+      .orderBy(desc(opportunities.spread));
 
-  const alertsStatus = await db.select()
-    .from(alertSettings)
-    .where(eq(alertSettings.userClerkId, userId))
-    .limit(1);
+    lastPrices = await db.select({
+      lastUpdated: exchangePrices.lastUpdated,
+    })
+      .from(exchangePrices)
+      .orderBy(desc(exchangePrices.lastUpdated))
+      .limit(1);
 
-  // Historical Data for charts
-  const recentRuns = await db.select()
-    .from(scanRuns)
-    .where(eq(scanRuns.status, 'completed'))
-    .orderBy(desc(scanRuns.startedAt))
-    .limit(20);
+    alertsStatus = await db.select()
+      .from(alertSettings)
+      .where(eq(alertSettings.userClerkId, userId))
+      .limit(1);
 
-  const latestScan = await db.select()
-    .from(scanRuns)
-    .orderBy(desc(scanRuns.startedAt))
-    .limit(1)
-    .then((rows) => rows[0] ?? null);
+    // Historical Data for charts
+    recentRuns = await db.select()
+      .from(scanRuns)
+      .where(eq(scanRuns.status, 'completed'))
+      .orderBy(desc(scanRuns.startedAt))
+      .limit(20);
 
-  const providerHealth = latestScan
-    ? await db.select().from(spotProviderHealth).where(eq(spotProviderHealth.scanRunId, latestScan.id)).orderBy(desc(spotProviderHealth.checkedAt))
-    : [];
+    const latestScan = await db.select()
+      .from(scanRuns)
+      .orderBy(desc(scanRuns.startedAt))
+      .limit(1)
+      .then((rows) => rows[0] ?? null);
+
+    if (latestScan) {
+      providerHealth = await db.select()
+        .from(spotProviderHealth)
+        .where(eq(spotProviderHealth.scanRunId, latestScan.id))
+        .orderBy(desc(spotProviderHealth.checkedAt));
+    }
+
+    // Journal Stats
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    todayTrades = await db.select()
+      .from(tradeJournal)
+      .where(and(eq(tradeJournal.userClerkId, userId), gte(tradeJournal.createdAt, today)));
+
+    weeklyTrades = await db.select()
+      .from(tradeJournal)
+      .where(and(eq(tradeJournal.userClerkId, userId), gte(tradeJournal.createdAt, weekAgo)));
+
+    userGoal = await db.select().from(userGoals).where(eq(userGoals.userClerkId, userId)).limit(1);
+    autopilot = await db.select().from(autoPilotSettings).where(eq(autoPilotSettings.userClerkId, userId)).limit(1);
+  } catch (err) {
+    dashboardError = err instanceof Error ? err.message : String(err);
+    console.error('[Dashboard] DB load error:', err);
+  }
 
   const spreadTrend = [...recentRuns].reverse().map(r => Number(r.bestSpread));
   const profitTrend = [...recentRuns].reverse().map(r => Number(r.bestNetProfit));
@@ -64,31 +100,23 @@ export default async function DashboardOverview() {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
 
-  const todayTrades = await db.select()
-    .from(tradeJournal)
-    .where(and(eq(tradeJournal.userClerkId, userId), gte(tradeJournal.createdAt, today)));
-
-  const weeklyTrades = await db.select()
-    .from(tradeJournal)
-    .where(and(eq(tradeJournal.userClerkId, userId), gte(tradeJournal.createdAt, weekAgo)));
-
   const profitToday = todayTrades.reduce((sum, t) => sum + parseFloat(t.netProfitNgn), 0);
   const profitWeekly = weeklyTrades.reduce((sum, t) => sum + parseFloat(t.netProfitNgn), 0);
 
-  const userGoal = await db.select().from(userGoals).where(eq(userGoals.userClerkId, userId)).limit(1);
-  const autopilot = await db.select().from(autoPilotSettings).where(eq(autoPilotSettings.userClerkId, userId)).limit(1);
+  const userGoalRow = userGoal[0] ?? null;
+  const autopilotRow = autopilot[0] ?? null;
 
-  const dailyTarget = parseFloat(userGoal[0]?.dailyProfitTarget || "10000");
-  const weeklyTarget = parseFloat(userGoal[0]?.weeklyProfitTarget || "50000");
-
-  const dailyProgress = Math.min((profitToday / dailyTarget) * 100, 100);
-  const weeklyProgress = Math.min((profitWeekly / weeklyTarget) * 100, 100);
+  const dailyTarget = parseFloat(userGoalRow?.dailyProfitTarget || "10000");
+  const weeklyTarget = parseFloat(userGoalRow?.weeklyProfitTarget || "50000");
 
   const totalOpps = activeSpreads.length;
   const bestSpread = totalOpps > 0 ? Math.max(...activeSpreads.map(s => Number(s.spread))) : 0;
   const totalNetProfit = activeSpreads.reduce((sum, opp) => sum + Number(opp.netProfit), 0);
   const scanTime = lastPrices.length > 0 ? lastPrices[0].lastUpdated.toLocaleTimeString() : 'N/A';
   const isAlerting = alertsStatus[0]?.alertsEnabled ?? false;
+
+  const dailyProgress = Math.min((profitToday / dailyTarget) * 100, 100);
+  const weeklyProgress = Math.min((profitWeekly / weeklyTarget) * 100, 100);
 
   return (
     <div className="space-y-6">
@@ -108,6 +136,12 @@ export default async function DashboardOverview() {
           </Link>
         </div>
       </div>
+
+      {dashboardError ? (
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
+          <strong>Dashboard load warning:</strong> {dashboardError}. Some metrics may be unavailable.
+        </div>
+      ) : null}
 
       {isPremium && <PremiumAnalytics />}
 
