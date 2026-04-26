@@ -14,17 +14,8 @@ import { calculateSpotOpportunities } from '../scanner/spot/calculate-opportunit
 import { MarketPrice } from '../scanner/spot/types';
 import { SPOT_SYMBOLS, CONFIRMATION_WAIT_SECONDS } from '../scanner/spot/config';
 
-const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql);
 
-const providers = [
-  new BinanceSpotProvider(),
-  new BybitSpotProvider(),
-  new KuCoinSpotProvider(),
-  new OKXSpotProvider(),
-];
-
-async function fetchAllPrices(): Promise<MarketPrice[]> {
+async function fetchAllPrices(providers: any[]): Promise<MarketPrice[]> {
   const results = await Promise.all(providers.map((p) => p.fetchPrices()));
   return results.flat();
 }
@@ -34,6 +25,16 @@ function sleep(seconds: number): Promise<void> {
 }
 
 export async function runSpotScanner() {
+  const sql = neon(process.env.DATABASE_URL!);
+  const db = drizzle(sql);
+
+  const providers = [
+    new BinanceSpotProvider(),
+    new BybitSpotProvider(),
+    new KuCoinSpotProvider(),
+    new OKXSpotProvider(),
+  ];
+
   console.log('🚀 Starting Spot Arbitrage Scanner...');
   console.log(`📡 Monitoring ${SPOT_SYMBOLS.join(', ')} on ${providers.map((p) => p.name).join(', ')}`);
 
@@ -46,7 +47,7 @@ export async function runSpotScanner() {
   try {
     // ─── PHASE 1: Initial Price Fetch ───────────────────────────────────────
     console.log('\n📥 Phase 1: Fetching live prices...');
-    const firstFetch = await fetchAllPrices();
+    const firstFetch = await fetchAllPrices(providers);
 
     console.log(`\n📊 Raw normalized prices (${firstFetch.length} records):`);
     for (const p of firstFetch) {
@@ -84,7 +85,7 @@ export async function runSpotScanner() {
     if (candidates.length > 0) {
       await sleep(CONFIRMATION_WAIT_SECONDS);
       console.log('\n🔄 Phase 3: Second confirmation fetch...');
-      const secondFetch = await fetchAllPrices();
+      const secondFetch = await fetchAllPrices(providers);
 
       console.log(`📊 Confirmation prices (${secondFetch.length} records):`);
       for (const p of secondFetch) {

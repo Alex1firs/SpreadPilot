@@ -6,8 +6,6 @@ import { eq, and, isNotNull, sql } from 'drizzle-orm';
 import { opportunities, alertSettings, alertLogs, subscriptions } from '../db/schema';
 import { sendTelegramAlert } from '../lib/telegram';
 
-const client = neon(process.env.DATABASE_URL!);
-const db = drizzle(client);
 
 const RISK_MAP: Record<string, number> = {
   'Low': 1,
@@ -16,6 +14,9 @@ const RISK_MAP: Record<string, number> = {
 };
 
 export async function runAlertCheck() {
+  const client = neon(process.env.DATABASE_URL!);
+  const db = drizzle(client);
+
   console.log('🔍 Starting Telegram Alerts Dispatch Job...');
 
   // 1. Fetch active opportunities

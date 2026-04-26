@@ -11,10 +11,10 @@ import { BybitProvider } from '../scanner/p2p/providers/bybit';
 import { KucoinProvider } from '../scanner/p2p/providers/kucoin';
 import { calculateOpportunities } from '../scanner/p2p/calculate-opportunities';
 
-const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql);
-
 export async function runScanner() {
+  const sql = neon(process.env.DATABASE_URL!);
+  const db = drizzle(sql);
+
   console.log('🚀 Starting P2P Price Scanner...');
 
   // 0. Safety: Check for active/stale "pending" scans
