@@ -32,3 +32,12 @@ jobs:
           curl -s -X POST "https://spread-pilot-seven.vercel.app/api/jobs/run-ngn-p2p" \
           -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
           -H "Content-Type: application/json"
+
+  run-triangular-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Triangular Scanner
+        run: |
+          curl -s -X POST "https://spread-pilot-seven.vercel.app/api/jobs/run-triangular-scan" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Content-Type: application/json"

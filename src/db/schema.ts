@@ -174,3 +174,15 @@ export const ngnP2pSpreads = pgTable('ngn_p2p_spreads', {
   spreadPercent: numeric('spread_percent').notNull(),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
 });
+
+export const triangularOpportunities = pgTable('triangular_opportunities', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  exchange: text('exchange').notNull(),
+  trianglePath: text('triangle_path').notNull(),
+  step1Detail: text('step1_detail').notNull(),
+  step2Detail: text('step2_detail').notNull(),
+  step3Detail: text('step3_detail').notNull(),
+  grossProfitPercent: numeric('gross_profit_percent').notNull(),
+  netProfitPercent: numeric('net_profit_percent').notNull(),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+});
