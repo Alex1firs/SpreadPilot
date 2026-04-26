@@ -6,10 +6,10 @@ import { Zap, ShieldCheck, AlertCircle, Clock, TrendingUp, ArrowRight, Info } fr
 
 export const dynamic = 'force-dynamic';
 
-const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql);
-
 async function getSpotData() {
+  const sql = neon(process.env.DATABASE_URL!);
+  const db = drizzle(sql);
+
   const [activeOpps, lastScan, latestPrices] = await Promise.all([
     db.select()
       .from(spotOpportunities)
