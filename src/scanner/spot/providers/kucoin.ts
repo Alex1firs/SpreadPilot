@@ -65,12 +65,13 @@ export class KuCoinSpotProvider {
           continue;
         }
 
-        // KuCoin: "buy" field = best ask (lowest price you can buy at)
-        //         "sell" field = best bid (highest price you can sell at)
-        const askPrice = parseFloat(ticker.buy);
-        const bidPrice = parseFloat(ticker.sell);
-        const askQty = parseFloat(ticker.bestAskSize ?? '0');
-        const bidQty = parseFloat(ticker.bestBidSize ?? '0');
+        // KuCoin field naming:
+        // "buy"  = best bid price (highest price a buyer will pay)
+        // "sell" = best ask price (lowest price a seller will accept)
+        const bidPrice = parseFloat(ticker.buy);   // bid
+        const askPrice = parseFloat(ticker.sell);  // ask
+        const bidQty   = parseFloat(ticker.bestBidSize ?? '0');
+        const askQty   = parseFloat(ticker.bestAskSize ?? '0');
 
         if (!bidPrice || !askPrice || isNaN(bidPrice) || isNaN(askPrice)) {
           console.warn(`⚠️ [KuCoin] Invalid price data for ${symbol}`);

@@ -9,6 +9,7 @@ import { eq } from 'drizzle-orm';
 import { BinanceSpotProvider } from '../scanner/spot/providers/binance';
 import { BybitSpotProvider } from '../scanner/spot/providers/bybit';
 import { KuCoinSpotProvider } from '../scanner/spot/providers/kucoin';
+import { OKXSpotProvider } from '../scanner/spot/providers/okx';
 import { calculateSpotOpportunities } from '../scanner/spot/calculate-opportunities';
 import { MarketPrice } from '../scanner/spot/types';
 import { SPOT_SYMBOLS, CONFIRMATION_WAIT_SECONDS } from '../scanner/spot/config';
@@ -20,6 +21,7 @@ const providers = [
   new BinanceSpotProvider(),
   new BybitSpotProvider(),
   new KuCoinSpotProvider(),
+  new OKXSpotProvider(),
 ];
 
 async function fetchAllPrices(): Promise<MarketPrice[]> {

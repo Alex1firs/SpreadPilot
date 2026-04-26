@@ -8,7 +8,7 @@ const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
 
 async function getSpotData() {
-  const [activeOpps, lastScan] = await Promise.all([
+  const [activeOpps, lastScan, latestPrices] = await Promise.all([
     db.select()
       .from(spotOpportunities)
       .where(eq(spotOpportunities.status, 'active'))
@@ -18,9 +18,14 @@ async function getSpotData() {
       .from(spotScanRuns)
       .orderBy(desc(spotScanRuns.startedAt))
       .limit(1),
+    // Fetch latest prices for each exchange/symbol to show spreads
+    db.select()
+      .from(spotMarketPrices)
+      .orderBy(desc(spotMarketPrices.createdAt))
+      .limit(25), // Enough to cover 4 exchanges * 5 symbols
   ]);
 
-  return { activeOpps, lastScan: lastScan[0] ?? null };
+  return { activeOpps, lastScan: lastScan[0] ?? null, latestPrices };
 }
 
 function formatTime(date: Date | string | null) {
@@ -88,7 +93,7 @@ export default async function SpotArbitragePage() {
         <div className="space-y-0.5">
           <p className="text-blue-300 font-medium">Real public market data — No simulated opportunities shown</p>
           <p className="text-blue-400/70">
-            Prices fetched from Binance, Bybit, and KuCoin public REST APIs. Opportunities require a second
+            Prices fetched from Binance, Bybit, KuCoin, and OKX public REST APIs. Opportunities require a second
             confirmation check before being saved.
           </p>
         </div>
@@ -220,6 +225,47 @@ export default async function SpotArbitragePage() {
           </div>
         </div>
       )}
+      {/* Market Spreads Intelligence */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-gray-400" />
+          <h2 className="text-white font-semibold text-lg">Market Spreads Intelligence</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT'].map((symbol) => {
+            const symPrices = latestPrices.filter(p => p.symbol === symbol);
+            if (symPrices.length === 0) return null;
+            
+            // Calculate max bid and min ask across exchanges
+            const maxBid = Math.max(...symPrices.map(p => parseFloat(p.bidPrice)));
+            const minAsk = Math.min(...symPrices.map(p => parseFloat(p.askPrice)));
+            const rawSpread = ((maxBid - minAsk) / minAsk) * 100;
+
+            return (
+              <div key={symbol} className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-white font-bold">{symbol}</span>
+                  <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${rawSpread > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}`}>
+                    {rawSpread.toFixed(3)}% Spread
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {symPrices.map((p, idx) => (
+                    <div key={`${p.exchange}-${idx}`} className="flex items-center justify-between text-xs">
+                      <span className="text-gray-500">{p.exchange}</span>
+                      <div className="flex items-center gap-2 font-mono">
+                        <span className="text-red-400/70">${parseFloat(p.askPrice).toFixed(2)}</span>
+                        <span className="text-gray-700">|</span>
+                        <span className="text-emerald-400/70">${parseFloat(p.bidPrice).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

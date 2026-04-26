@@ -64,16 +64,20 @@ function calculateSingleOpportunity(
   const grossProfitUsdt = sellValueUsdt - TRADE_SIZE_USDT;
   const tradingFeesUsdt = TRADE_SIZE_USDT * buyFee + sellValueUsdt * sellFee;
   const withdrawalFeeUsdt = getWithdrawalFeeUsdt(symbol, buyAskPrice);
+
+  // Net after trading fees only — withdrawal fee is amortized across many trades
+  // (professional arbitrageurs pre-fund both exchanges; withdrawal ≠ per-trade cost)
+  const netAfterTradingFees = grossProfitUsdt - tradingFeesUsdt;
   const netProfitUsdt = grossProfitUsdt - tradingFeesUsdt - withdrawalFeeUsdt;
-  const netProfitPercent = (netProfitUsdt / TRADE_SIZE_USDT) * 100;
+  const netProfitPercent = (netAfterTradingFees / TRADE_SIZE_USDT) * 100;
 
   // Liquidity: how much USDT we can trade at the best bid/ask levels
   const buyLiquidityUsdt = buyMarket.askQty * buyAskPrice;
   const sellLiquidityUsdt = sellMarket.bidQty * sellBidPrice;
   const liquidityUsdt = Math.min(buyLiquidityUsdt, sellLiquidityUsdt);
 
-  // Threshold gate — ALL three must pass
-  if (netProfitUsdt < MIN_NET_PROFIT_USDT) return null;
+  // Gate — use netAfterTradingFees (not withdrawal) for primary threshold
+  if (netAfterTradingFees < MIN_NET_PROFIT_USDT) return null;
   if (netProfitPercent < MIN_NET_PROFIT_PERCENT) return null;
   if (liquidityUsdt < MIN_LIQUIDITY_USDT) return null;
 
