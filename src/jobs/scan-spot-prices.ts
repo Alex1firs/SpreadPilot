@@ -15,8 +15,9 @@ import { MarketPrice } from '../scanner/spot/types';
 import { SPOT_SYMBOLS, CONFIRMATION_WAIT_SECONDS } from '../scanner/spot/config';
 
 
-async function fetchAllPrices(providers: any[]): Promise<MarketPrice[]> {
-  const results = await Promise.all(providers.map((p) => p.fetchPrices()));
+async function fetchAllPrices(providers: unknown[]): Promise<MarketPrice[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const results = await Promise.all(providers.map((p: any) => p.fetchPrices()));
   return results.flat();
 }
 
