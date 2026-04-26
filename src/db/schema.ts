@@ -186,3 +186,13 @@ export const triangularOpportunities = pgTable('triangular_opportunities', {
   netProfitPercent: numeric('net_profit_percent').notNull(),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
 });
+
+export const fundingRates = pgTable('funding_rates', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  exchange: text('exchange').notNull(),
+  symbol: text('symbol').notNull(),
+  fundingRate: numeric('funding_rate').notNull(),
+  annualizedYield: numeric('annualized_yield').notNull(),
+  nextFundingTime: timestamp('next_funding_time').notNull(),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+});

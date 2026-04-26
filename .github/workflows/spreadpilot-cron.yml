@@ -41,3 +41,12 @@ jobs:
           curl -s -X POST "https://spread-pilot-seven.vercel.app/api/jobs/run-triangular-scan" \
           -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
           -H "Content-Type: application/json"
+
+  run-funding-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Funding Rate Scanner
+        run: |
+          curl -s -X POST "https://spread-pilot-seven.vercel.app/api/jobs/run-funding-scan" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Content-Type: application/json"

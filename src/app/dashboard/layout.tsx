@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Activity, LayoutDashboard, BookOpen, Settings, History, CreditCard, TrendingUp, Zap, LineChart, Repeat } from 'lucide-react';
+import { Activity, LayoutDashboard, BookOpen, Settings, History, CreditCard, TrendingUp, Zap, LineChart, Repeat, Coins } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { getUserSubscription, PLANS } from '@/lib/subscription';
 import { auth } from '@clerk/nextjs/server';
@@ -50,6 +50,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Repeat className="h-4 w-4 text-indigo-400 group-hover:text-indigo-300" />
             <span>Triangular Arb</span>
             <span className="ml-auto text-[9px] font-bold bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded uppercase tracking-wide">Beta</span>
+          </Link>
+          <Link href="/dashboard/funding" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors group">
+            <Coins className="h-4 w-4 text-pink-400 group-hover:text-pink-300" />
+            <span>Delta Neutral Yield</span>
+            <span className="ml-auto text-[9px] font-bold bg-pink-500/20 text-pink-400 px-1.5 py-0.5 rounded uppercase tracking-wide">New</span>
           </Link>
           <Link href="/dashboard/history" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors">
             <History className="h-4 w-4" />
