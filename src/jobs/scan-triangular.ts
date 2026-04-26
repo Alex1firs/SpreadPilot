@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import { triangularOpportunities, alertSettings, subscriptions } from '../db/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { sendTelegramAlert } from '@/lib/telegram';
+import { executeForAllUsers } from '@/lib/execution/engine';
 
 import { BinanceTriangularProvider } from '../scanner/triangular/providers/binance';
 import { BybitTriangularProvider } from '../scanner/triangular/providers/bybit';
@@ -14,29 +15,32 @@ import {
 } from '../scanner/triangular/config';
 import { TriangularOpportunity, TrianglePath, OrderbookSnapshot } from '../scanner/triangular/types';
 
+interface TriangularResult extends TriangularOpportunity {
+  legs: Array<{ symbol: string; side: 'buy' | 'sell'; price: number }>;
+}
+
 function evaluateTriangle(
   exchange: string,
   path: TrianglePath,
   tickerMap: Map<string, OrderbookSnapshot>
-): TriangularOpportunity | null {
+): TriangularResult | null {
   
-  let currentAmount = 1.0; // Start with 1.0 units (e.g. USDT)
+  let currentAmount = 1.0; 
   const steps: string[] = [];
+  const legs: Array<{ symbol: string; side: 'buy' | 'sell'; price: number }> = [];
 
   for (const leg of [path.leg1, path.leg2, path.leg3]) {
     const ticker = tickerMap.get(leg.symbol);
-    
-    // If ANY leg is missing from the exchange's available pairs, the entire loop fails.
     if (!ticker) return null;
 
     if (leg.action === 'BUY') {
-      // To buy base with quote, divide by ASK price (what sellers demand)
       currentAmount = currentAmount / ticker.askPrice;
       steps.push(`${leg.action} ${leg.symbol} @ ${ticker.askPrice}`);
+      legs.push({ symbol: leg.symbol, side: 'buy', price: ticker.askPrice });
     } else {
-      // To sell base for quote, multiply by BID price (what buyers offer)
       currentAmount = currentAmount * ticker.bidPrice;
       steps.push(`${leg.action} ${leg.symbol} @ ${ticker.bidPrice}`);
+      legs.push({ symbol: leg.symbol, side: 'sell', price: ticker.bidPrice });
     }
   }
 
@@ -56,8 +60,9 @@ function evaluateTriangle(
       step3Detail: steps[2],
       grossProfitPercent,
       netProfitPercent,
-      confidenceScore: Math.min(100, Math.floor(netProfitPercent * 100)), // arbitrary scale
-      timestamp: new Date()
+      confidenceScore: Math.min(100, Math.floor(netProfitPercent * 100)),
+      timestamp: new Date(),
+      legs
     };
   }
 
@@ -89,6 +94,14 @@ export async function runTriangularScanner() {
         const opp = evaluateTriangle(provider.name, path, tickerMap);
         if (opp) {
           foundOpportunities.push(opp);
+          
+          // Trigger AutoPilot Execution Engine
+          executeForAllUsers({
+            strategy: 'Triangular',
+            exchange: opp.exchange,
+            legs: opp.legs,
+            expectedProfitPercent: opp.netProfitPercent,
+          }).catch(err => console.error('Auto-Execution Error:', err));
         }
       }
     }

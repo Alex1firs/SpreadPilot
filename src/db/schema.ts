@@ -196,3 +196,40 @@ export const fundingRates = pgTable('funding_rates', {
   nextFundingTime: timestamp('next_funding_time').notNull(),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
 });
+
+export const userApiKeys = pgTable('user_api_keys', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userClerkId: text('user_clerk_id').notNull(),
+  exchange: text('exchange').notNull(),
+  apiKey: text('api_key').notNull(),
+  apiSecret: text('api_secret').notNull(),
+  passphrase: text('passphrase'),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const autoPilotSettings = pgTable('auto_pilot_settings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userClerkId: text('user_clerk_id').notNull().unique(),
+  isEnabled: boolean('is_enabled').default(false).notNull(),
+  maxTradeSizeUsdt: numeric('max_trade_size_usdt').default('100').notNull(),
+  minProfitPercent: numeric('min_profit_percent').default('0.5').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const autoTrades = pgTable('auto_trades', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userClerkId: text('user_clerk_id').notNull(),
+  strategy: text('strategy').notNull(), 
+  exchange: text('exchange').notNull(),
+  symbol: text('symbol').notNull(),
+  side: text('side').notNull(), 
+  quantity: numeric('quantity').notNull(),
+  price: numeric('price').notNull(),
+  status: text('status').notNull().default('Pending'), 
+  profitUsdt: numeric('profit_usdt'),
+  errorMessage: text('error_message'),
+  orderId: text('order_id'),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+});

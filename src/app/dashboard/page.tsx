@@ -2,12 +2,13 @@ import { MetricCard } from '@/components/ui/MetricCard';
 import { Activity, TrendingUp, DollarSign, BellRing, Clock, ArrowUpRight, BarChart3, Target } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/db';
-import { opportunities, exchangePrices, alertSettings, scanRuns, tradeJournal, userGoals } from '@/db/schema';
+import { opportunities, exchangePrices, alertSettings, scanRuns, tradeJournal, userGoals, autoPilotSettings } from '@/db/schema';
 import { eq, desc, gte, and } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
 import { MiniTrendChart } from '@/components/charts/mini-trend';
 import { getUserSubscription, PLANS } from '@/lib/subscription';
 import { PremiumAnalytics } from './PremiumAnalytics';
+import { AutoPilotWidget } from './AutoPilotWidget';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +65,8 @@ export default async function DashboardOverview() {
   const profitWeekly = weeklyTrades.reduce((sum, t) => sum + parseFloat(t.netProfitNgn), 0);
 
   const userGoal = await db.select().from(userGoals).where(eq(userGoals.userClerkId, userId)).limit(1);
+  const autopilot = await db.select().from(autoPilotSettings).where(eq(autoPilotSettings.userClerkId, userId)).limit(1);
+
   const dailyTarget = parseFloat(userGoal[0]?.dailyProfitTarget || "10000");
   const weeklyTarget = parseFloat(userGoal[0]?.weeklyProfitTarget || "50000");
 
@@ -135,6 +138,13 @@ export default async function DashboardOverview() {
           </div>
         </div>
       </div>
+
+      {/* AutoPilot MVP Control */}
+      <AutoPilotWidget 
+        initialEnabled={autopilot[0]?.isEnabled ?? false}
+        initialMaxSize={autopilot[0]?.maxTradeSizeUsdt || "100"}
+        initialMinProfit={autopilot[0]?.minProfitPercent || "0.5"}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard 

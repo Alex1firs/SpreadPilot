@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Activity, LayoutDashboard, BookOpen, Settings, History, CreditCard, TrendingUp, Zap, LineChart, Repeat, Coins } from 'lucide-react';
+import { Activity, LayoutDashboard, BookOpen, Settings, History, CreditCard, TrendingUp, Zap, LineChart, Repeat, Coins, Key } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { getUserSubscription, PLANS } from '@/lib/subscription';
 import { auth } from '@clerk/nextjs/server';
@@ -71,6 +71,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Link href="/dashboard/settings" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors">
             <Settings className="h-4 w-4" />
             Settings
+          </Link>
+          <Link href="/dashboard/settings/api-keys" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors group">
+            <Key className="h-4 w-4 text-emerald-400 group-hover:text-emerald-300" />
+            <span>API Credentials</span>
+            <span className="ml-auto text-[9px] font-bold bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded uppercase tracking-wide">VIP</span>
           </Link>
         </nav>
 
