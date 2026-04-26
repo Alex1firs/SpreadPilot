@@ -122,3 +122,47 @@ export const subscriptions = pgTable('subscriptions', {
   paystackSubscriptionCode: text('paystack_subscription_code'),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const spotMarketPrices = pgTable('spot_market_prices', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  exchange: text('exchange').notNull(),
+  symbol: text('symbol').notNull(),
+  bidPrice: numeric('bid_price').notNull(),
+  bidQty: numeric('bid_qty').notNull(),
+  askPrice: numeric('ask_price').notNull(),
+  askQty: numeric('ask_qty').notNull(),
+  timestamp: timestamp('timestamp').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const spotOpportunities = pgTable('spot_opportunities', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  symbol: text('symbol').notNull(),
+  buyExchange: text('buy_exchange').notNull(),
+  sellExchange: text('sell_exchange').notNull(),
+  buyPrice: numeric('buy_price').notNull(),
+  sellPrice: numeric('sell_price').notNull(),
+  tradeSizeUsdt: numeric('trade_size_usdt').notNull(),
+  grossProfitUsdt: numeric('gross_profit_usdt').notNull(),
+  tradingFeesUsdt: numeric('trading_fees_usdt').notNull(),
+  withdrawalFeeUsdt: numeric('withdrawal_fee_usdt').notNull(),
+  netProfitUsdt: numeric('net_profit_usdt').notNull(),
+  netProfitPercent: numeric('net_profit_percent').notNull(),
+  liquidityUsdt: numeric('liquidity_usdt').notNull(),
+  confidenceScore: numeric('confidence_score').notNull().default('0'),
+  status: text('status').notNull().default('active'),
+  confirmedAt: timestamp('confirmed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const spotScanRuns = pgTable('spot_scan_runs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  startedAt: timestamp('started_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+  exchangesScanned: numeric('exchanges_scanned').notNull().default('0'),
+  symbolsScanned: numeric('symbols_scanned').notNull().default('0'),
+  opportunitiesFound: numeric('opportunities_found').notNull().default('0'),
+  status: text('status').notNull().default('pending'),
+  errorMessage: text('error_message'),
+});
+

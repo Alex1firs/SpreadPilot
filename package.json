@@ -11,7 +11,8 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
     "alerts:check": "tsx src/jobs/check-alerts.ts",
-    "scanner:run": "tsx src/jobs/scan-prices.ts"
+    "scanner:run": "tsx src/jobs/scan-prices.ts",
+    "spot:scan": "tsx src/jobs/scan-spot-prices.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.7",

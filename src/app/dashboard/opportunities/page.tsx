@@ -23,8 +23,26 @@ export default async function OpportunitiesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Active Opportunities</h1>
-        <p className="text-gray-400">Live P2P spreads with realistic fees, slippage, and net profit calculations.</p>
+        <div className="flex items-center gap-2 mb-1">
+          <h1 className="text-2xl font-bold text-white">P2P Signals</h1>
+          <span className="text-[10px] font-bold bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            Estimated
+          </span>
+        </div>
+        <p className="text-gray-400">Estimated P2P spreads based on market simulation. Not guaranteed live prices.</p>
+      </div>
+
+      {/* Estimated data banner */}
+      <div className="flex items-start gap-3 p-4 bg-yellow-950/30 border border-yellow-500/20 rounded-xl text-sm">
+        <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5 shrink-0" />
+        <div>
+          <p className="text-yellow-400 font-medium">P2P Signals — Estimated Data Only</p>
+          <p className="text-yellow-500/60 text-xs mt-0.5">
+            These opportunities are generated from P2P market estimates and are NOT guaranteed live exchange prices.
+            For real confirmed arbitrage from public APIs, see{' '}
+            <a href="/dashboard/spot" className="underline text-yellow-400">Spot Arbitrage</a>.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Activity, LayoutDashboard, LineChart, BookOpen, Settings, History, CreditCard } from 'lucide-react';
+import { Activity, LayoutDashboard, BookOpen, Settings, History, CreditCard, TrendingUp, Zap } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { getUserSubscription, PLANS } from '@/lib/subscription';
 import { auth } from '@clerk/nextjs/server';
@@ -31,9 +31,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <LayoutDashboard className="h-4 w-4" />
             Overview
           </Link>
+          <Link href="/dashboard/spot" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors group">
+            <Zap className="h-4 w-4 text-emerald-400 group-hover:text-emerald-300" />
+            <span>Spot Arbitrage</span>
+            <span className="ml-auto text-[9px] font-bold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded uppercase tracking-wide">Live</span>
+          </Link>
           <Link href="/dashboard/opportunities" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors">
-            <LineChart className="h-4 w-4" />
-            Opportunities
+            <TrendingUp className="h-4 w-4" />
+            <span>P2P Signals</span>
+            <span className="ml-auto text-[9px] font-bold bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded uppercase tracking-wide">Est.</span>
           </Link>
           <Link href="/dashboard/history" className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors">
             <History className="h-4 w-4" />

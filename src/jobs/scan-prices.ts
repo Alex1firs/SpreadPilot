@@ -5,11 +5,11 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import { opportunities, exchangePrices, scanRuns, opportunitySnapshots } from '../db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 
-import { BinanceProvider } from '../scanner/providers/binance';
-import { OkxProvider } from '../scanner/providers/okx';
-import { BybitProvider } from '../scanner/providers/bybit';
-import { KucoinProvider } from '../scanner/providers/kucoin';
-import { calculateOpportunities } from '../scanner/calculate-opportunities';
+import { BinanceProvider } from '../scanner/p2p/providers/binance';
+import { OkxProvider } from '../scanner/p2p/providers/okx';
+import { BybitProvider } from '../scanner/p2p/providers/bybit';
+import { KucoinProvider } from '../scanner/p2p/providers/kucoin';
+import { calculateOpportunities } from '../scanner/p2p/calculate-opportunities';
 
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
