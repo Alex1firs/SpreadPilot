@@ -4,15 +4,16 @@ import { NextResponse } from 'next/server';
 // (no CLI process.argv dependency)
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { spotMarketPrices, spotOpportunities, spotScanRuns } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { spotMarketPrices, spotOpportunities, spotScanRuns, alertSettings, subscriptions } from '@/db/schema';
+import { eq, and, isNotNull } from 'drizzle-orm';
+import { sendTelegramAlert } from '@/lib/telegram';
 
 import { BinanceSpotProvider } from '@/scanner/spot/providers/binance';
 import { BybitSpotProvider } from '@/scanner/spot/providers/bybit';
 import { KuCoinSpotProvider } from '@/scanner/spot/providers/kucoin';
 import { OKXSpotProvider } from '@/scanner/spot/providers/okx';
 import { calculateSpotOpportunities } from '@/scanner/spot/calculate-opportunities';
-import { MarketPrice } from '@/scanner/spot/types';
+import { MarketPrice, SpotOpportunity } from '@/scanner/spot/types';
 import { SPOT_SYMBOLS, CONFIRMATION_WAIT_SECONDS } from '@/scanner/spot/config';
 
 // Max Vercel function duration – set to 60s (Pro plan supports up to 300s)
@@ -120,6 +121,48 @@ export async function POST(request: Request) {
       symbolsScanned: SPOT_SYMBOLS.length.toString(),
       opportunitiesFound: confirmedOpps.length.toString(),
     }).where(eq(spotScanRuns.id, scanRun.id));
+
+    // Phase 5: Send Telegram alerts to Pro/Premium users
+    if (confirmedOpps.length > 0) {
+      try {
+        const proUsers = await db.select({
+          telegramChatId: alertSettings.telegramChatId,
+          userClerkId: alertSettings.userClerkId,
+        })
+          .from(alertSettings)
+          .innerJoin(subscriptions, eq(alertSettings.userClerkId, subscriptions.userClerkId))
+          .where(and(
+            eq(alertSettings.alertsEnabled, true),
+            isNotNull(alertSettings.telegramChatId),
+            eq(subscriptions.status, 'active'),
+          ));
+
+        for (const user of proUsers) {
+          if (!user.telegramChatId) continue;
+          for (const opp of confirmedOpps as SpotOpportunity[]) {
+            const msg = [
+              `🚀 <b>Spot Arbitrage Alert</b>`,
+              ``,
+              `<b>Pair:</b> ${opp.symbol}`,
+              `<b>Route:</b> Buy ${opp.buyExchange} → Sell ${opp.sellExchange}`,
+              ``,
+              `<b>Buy Price:</b> $${opp.buyPrice.toFixed(4)} (${opp.buyExchange})`,
+              `<b>Sell Price:</b> $${opp.sellPrice.toFixed(4)} (${opp.sellExchange})`,
+              ``,
+              `💰 <b>Net Profit: $${opp.netProfitUsdt.toFixed(2)} (${opp.netProfitPercent.toFixed(3)}%)</b>`,
+              `📦 Trade Size: $${opp.tradeSizeUsdt} USDT`,
+              `⚡ Fees: $${opp.tradingFeesUsdt.toFixed(2)}`,
+              `🔒 Confidence: ${opp.confidenceScore}%`,
+              ``,
+              `⚠️ Always verify prices before executing. Spreads close fast.`,
+            ].join('\n');
+            await sendTelegramAlert(user.telegramChatId, msg).catch(() => {});
+          }
+        }
+      } catch {
+        // Don't fail the scan if alerts fail
+      }
+    }
 
     return NextResponse.json({
       success: true,
