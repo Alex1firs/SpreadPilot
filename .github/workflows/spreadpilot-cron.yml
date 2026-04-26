@@ -1,16 +1,25 @@
-name: SpreadPilot 10-Min Scan
+name: SpreadPilot Scanner
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/10 * * * *'  # Every 10 minutes
   workflow_dispatch: # Allows manual triggering from GitHub UI
 
 jobs:
-  run-scan:
+  run-p2p-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger P2P Scanner
         run: |
-          curl -X POST "https://spread-pilot-seven.vercel.app/api/jobs/run-scan" \
+          curl -s -X POST "https://spread-pilot-seven.vercel.app/api/jobs/run-scan" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Content-Type: application/json"
+
+  run-spot-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Spot Arbitrage Scanner
+        run: |
+          curl -s -X POST "https://spread-pilot-seven.vercel.app/api/jobs/run-spot-scan" \
           -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
           -H "Content-Type: application/json"
