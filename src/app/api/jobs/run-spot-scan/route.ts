@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 // (no CLI process.argv dependency)
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { spotMarketPrices, spotOpportunities, spotScanRuns, alertSettings, subscriptions } from '@/db/schema';
+import { spotMarketPrices, spotOpportunities, spotScanRuns, spotProviderHealth, spotAlertLogs, alertSettings, subscriptions } from '@/db/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { sendTelegramAlert } from '@/lib/telegram';
 
@@ -48,10 +48,35 @@ export async function POST(request: Request) {
 
   try {
     // Phase 1: Fetch
-    const firstResults = await Promise.all(providers.map((p) => p.fetchPrices()));
-    const firstFetch: MarketPrice[] = firstResults.flat();
+    const providerResults = await Promise.all(
+      providers.map(async (provider) => {
+        const startTime = Date.now();
+        const prices = await provider.fetchPrices();
+        return {
+          exchange: provider.name,
+          prices,
+          durationMs: Date.now() - startTime,
+        };
+      })
+    );
 
-    // Save raw prices
+    const firstFetch: MarketPrice[] = providerResults.flatMap((result) => result.prices);
+
+    if (providerResults.length > 0) {
+      await db.insert(spotProviderHealth).values(
+        providerResults.map((result) => ({
+          scanRunId: scanRun.id,
+          exchange: result.exchange,
+          status: result.prices.length === SPOT_SYMBOLS.length ? 'ok' : result.prices.length > 0 ? 'partial' : 'failed',
+          pricesFetched: result.prices.length,
+          durationMs: result.durationMs,
+          errorMessage: null,
+          checkedAt: new Date(),
+        }))
+      );
+    }
+
+    // Save raw prices for transparency and debugging
     if (firstFetch.length > 0) {
       await db.insert(spotMarketPrices).values(
         firstFetch.map((p) => ({
@@ -96,8 +121,8 @@ export async function POST(request: Request) {
       .set({ status: 'expired' })
       .where(eq(spotOpportunities.status, 'active'));
 
-    if (confirmedOpps.length > 0) {
-      await db.insert(spotOpportunities).values(
+    const insertedOpps = confirmedOpps.length > 0
+      ? await db.insert(spotOpportunities).values(
         confirmedOpps.map((opp) => ({
           symbol: opp.symbol,
           buyExchange: opp.buyExchange,
@@ -115,18 +140,10 @@ export async function POST(request: Request) {
           status: 'active',
           confirmedAt: opp.confirmedAt,
         }))
-      );
-    }
+      ).returning()
+      : [];
 
-    await db.update(spotScanRuns).set({
-      status: 'completed',
-      completedAt: new Date(),
-      exchangesScanned: providers.length.toString(),
-      symbolsScanned: SPOT_SYMBOLS.length.toString(),
-      opportunitiesFound: confirmedOpps.length.toString(),
-    }).where(eq(spotScanRuns.id, scanRun.id));
-
-    // Phase 5: Send Telegram alerts to Pro/Premium users
+    let alertsSent = 0;
     if (confirmedOpps.length > 0) {
       try {
         const proUsers = await db.select({
@@ -143,7 +160,9 @@ export async function POST(request: Request) {
 
         for (const user of proUsers) {
           if (!user.telegramChatId) continue;
-          for (const opp of confirmedOpps as SpotOpportunity[]) {
+          for (let index = 0; index < confirmedOpps.length; index += 1) {
+            const opp = confirmedOpps[index] as SpotOpportunity;
+            const insertedOpp = insertedOpps[index];
             const msg = [
               `🚀 <b>Spot Arbitrage Alert</b>`,
               ``,
@@ -160,13 +179,34 @@ export async function POST(request: Request) {
               ``,
               `⚠️ Always verify prices before executing. Spreads close fast.`,
             ].join('\n');
-            await sendTelegramAlert(user.telegramChatId, msg).catch(() => {});
+
+            const sent = await sendTelegramAlert(user.telegramChatId, msg).catch(() => false);
+            if (sent !== false && insertedOpp?.id) {
+              alertsSent += 1;
+              await db.insert(spotAlertLogs).values({
+                userClerkId: user.userClerkId,
+                opportunityId: insertedOpp.id,
+                channel: 'telegram',
+                sentAt: new Date(),
+              }).catch(() => {});
+            }
           }
         }
-      } catch {
-        // Don't fail the scan if alerts fail
+      } catch (err) {
+        console.error('❌ [Spot Alerts] Failed to send alerts:', err instanceof Error ? err.message : err);
       }
     }
+
+    await db.update(spotScanRuns).set({
+      status: 'completed',
+      completedAt: new Date(),
+      exchangesScanned: providers.length,
+      symbolsScanned: SPOT_SYMBOLS.length,
+      pricesFetched: firstFetch.length,
+      candidatesFound: candidates.length,
+      opportunitiesFound: confirmedOpps.length,
+      alertsSent,
+    }).where(eq(spotScanRuns.id, scanRun.id));
 
     return NextResponse.json({
       success: true,

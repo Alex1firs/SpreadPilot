@@ -155,15 +155,37 @@ export const spotOpportunities = pgTable('spot_opportunities', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const spotAlertLogs = pgTable('spot_alert_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userClerkId: text('user_clerk_id').notNull(),
+  opportunityId: uuid('opportunity_id').references(() => spotOpportunities.id).notNull(),
+  channel: text('channel').default('telegram').notNull(),
+  sentAt: timestamp('sent_at').defaultNow().notNull(),
+});
+
 export const spotScanRuns = pgTable('spot_scan_runs', {
   id: uuid('id').defaultRandom().primaryKey(),
   startedAt: timestamp('started_at').defaultNow().notNull(),
   completedAt: timestamp('completed_at'),
   exchangesScanned: numeric('exchanges_scanned').notNull().default('0'),
   symbolsScanned: numeric('symbols_scanned').notNull().default('0'),
+  pricesFetched: numeric('prices_fetched').notNull().default('0'),
+  candidatesFound: numeric('candidates_found').notNull().default('0'),
   opportunitiesFound: numeric('opportunities_found').notNull().default('0'),
+  alertsSent: numeric('alerts_sent').notNull().default('0'),
   status: text('status').notNull().default('pending'),
   errorMessage: text('error_message'),
+});
+
+export const spotProviderHealth = pgTable('spot_provider_health', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  scanRunId: uuid('scan_run_id').references(() => spotScanRuns.id).notNull(),
+  exchange: text('exchange').notNull(),
+  status: text('status').notNull().default('unknown'),
+  pricesFetched: numeric('prices_fetched').notNull().default('0'),
+  durationMs: numeric('duration_ms').notNull().default('0'),
+  errorMessage: text('error_message'),
+  checkedAt: timestamp('checked_at').defaultNow().notNull(),
 });
 
 export const ngnP2pSpreads = pgTable('ngn_p2p_spreads', {

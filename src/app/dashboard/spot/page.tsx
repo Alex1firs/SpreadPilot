@@ -2,6 +2,7 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { spotOpportunities, spotScanRuns, spotMarketPrices } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
+import Link from 'next/link';
 import { Zap, ShieldCheck, AlertCircle, Clock, TrendingUp, ArrowRight, Info } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -79,6 +80,12 @@ export default async function SpotArbitragePage() {
           <p className="text-sm text-gray-400">
             Cross-exchange spot opportunities from live public market data.
           </p>
+          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+            <span>Proof page:</span>
+            <Link href="/dashboard/spot/debug" className="text-emerald-400 hover:text-emerald-300 underline">
+              View debug logs
+            </Link>
+          </div>
         </div>
 
         {/* Scanner Status */}
@@ -112,12 +119,14 @@ export default async function SpotArbitragePage() {
 
       {/* Scan Stats */}
       {lastScan && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           {[
             { label: 'Exchanges', value: lastScan.exchangesScanned ?? '—' },
             { label: 'Symbols', value: lastScan.symbolsScanned ?? '—' },
+            { label: 'Prices fetched', value: lastScan.pricesFetched ?? '—' },
+            { label: 'Candidates', value: lastScan.candidatesFound ?? '0' },
             { label: 'Opportunities', value: lastScan.opportunitiesFound ?? '0' },
-            { label: 'Scan Status', value: lastScan.status ?? '—' },
+            { label: 'Alerts sent', value: lastScan.alertsSent ?? '0' },
           ].map(({ label, value }) => (
             <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
               <p className="text-xs text-gray-500 mb-1">{label}</p>
@@ -134,15 +143,19 @@ export default async function SpotArbitragePage() {
             <AlertCircle className="h-7 w-7 text-gray-500" />
           </div>
           <div>
-            <p className="text-white font-semibold text-lg">No live spot arbitrage opportunities found right now.</p>
+            <p className="text-white font-semibold text-lg">Scanner ran successfully, but no profitable opportunity found.</p>
             <p className="text-gray-400 text-sm mt-1 max-w-md">
-              Scanner is active and monitoring real market data. Opportunities will appear here only when a profitable,
-              confirmed spread is detected across exchanges.
+              Real market data is being refreshed. This means the system is live, but no confirmed cross-exchange opportunity met the profitability criteria yet.
             </p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-600 mt-2">
-            <Clock className="h-3.5 w-3.5" />
-            <span>Last checked: {lastRunAt ? formatDate(lastRunAt) : 'Run <code>npm run spot:scan</code> to start'}</span>
+          <div className="flex flex-col items-center gap-1 text-xs text-gray-600 mt-2">
+            <div className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Last checked: {lastRunAt ? formatDate(lastRunAt) : 'Run <code>npm run spot:scan</code> to start'}</span>
+            </div>
+            {lastScan?.status === 'completed' && lastScan.errorMessage && (
+              <div className="text-red-400">Last scan completed with message: {lastScan.errorMessage}</div>
+            )}
           </div>
         </div>
       ) : (
