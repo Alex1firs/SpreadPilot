@@ -68,9 +68,8 @@ export async function POST(request: Request) {
           scanRunId: scanRun.id,
           exchange: result.exchange,
           status: result.prices.length === SPOT_SYMBOLS.length ? 'ok' : result.prices.length > 0 ? 'partial' : 'failed',
-          pricesFetched: result.prices.length,
-          durationMs: result.durationMs,
-          errorMessage: null,
+          pricesFetched: result.prices.length.toString(),
+          durationMs: result.durationMs.toString(),
           checkedAt: new Date(),
         }))
       );
@@ -200,12 +199,12 @@ export async function POST(request: Request) {
     await db.update(spotScanRuns).set({
       status: 'completed',
       completedAt: new Date(),
-      exchangesScanned: providers.length,
-      symbolsScanned: SPOT_SYMBOLS.length,
-      pricesFetched: firstFetch.length,
-      candidatesFound: candidates.length,
-      opportunitiesFound: confirmedOpps.length,
-      alertsSent,
+      exchangesScanned: providers.length.toString(),
+      symbolsScanned: SPOT_SYMBOLS.length.toString(),
+      pricesFetched: firstFetch.length.toString(),
+      candidatesFound: candidates.length.toString(),
+      opportunitiesFound: confirmedOpps.length.toString(),
+      alertsSent: alertsSent.toString(),
     }).where(eq(spotScanRuns.id, scanRun.id));
 
     return NextResponse.json({
